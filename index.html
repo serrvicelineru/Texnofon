@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEXNOFON — Управление заказами</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --whatsapp: #25d366;
+            --telegram: #0088cc;
+            --sms: #8b5cf6;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 550px;
+            background: var(--card-bg);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+        }
+        .logo-area {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .logo-area h1 {
+            margin: 0;
+            font-size: 26px;
+            color: #60a5fa;
+            letter-spacing: 0.5px;
+        }
+        .logo-area p {
+            margin: 5px 0 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 7px;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn {
+            width: 100%;
+            border: none;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            box-sizing: border-box;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn-tg { background-color: var(--telegram); }
+        .btn-wa { background-color: var(--whatsapp); }
+        .btn-sms { background-color: var(--sms); }
+        .btn-primary { background-color: var(--primary); margin-top: 10px; }
+        
+        .action-screen {
+            display: none;
+            text-align: center;
+        }
+        .action-screen h3 { color: var(--success); margin-bottom: 10px; }
+        .action-screen p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+        .back-btn { background: #334155; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-area">
+            <h1>TEXNOFON</h1>
+            <p>Готовый заказ — Отправка клиенту</p>
+        </div>
+
+        <!-- ФОРМА ВВОДА -->
+        <form id="orderForm">
+            <div class="form-group">
+                <label for="client_name">Имя клиента:</label>
+                <input type="text" id="client_name" required placeholder="Например: Алишер">
+            </div>
+
+            <div class="form-group">
+                <label for="client_phone">Номер телефона (с плюсом):</label>
+                <input type="text" id="client_phone" required placeholder="+998901234567">
+            </div>
+
+            <div class="form-group">
+                <label for="model">Устройство / Что делали:</label>
+                <input type="text" id="model" required placeholder="Samsung A24 (Замена экрана)">
+            </div>
+
+            <div class="form-group">
+                <label for="price">Сумма к оплате:</label>
+                <input type="text" id="price" required placeholder="450000 сум">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Сформировать уведомление</button>
+        </form>
+
+        <!-- ЭКРАН ВЫБОРА КУДА ОТПРАВИТЬ -->
+        <div id="actionScreen" class="action-screen">
+            <h3>Готово! Выберите способ отправки:</h3>
+            <p id="previewText" style="background: #0f172a; padding: 12px; border-radius: 8px; font-size: 13px; text-align: left; border: 1px solid var(--border);"></p>
+            
+            <div class="btn-group">
+                <a id="waLink" href="#" target="_blank" class="btn btn-wa">💬 Отправить в WhatsApp</a>
+                <a id="tgLink" href="#" target="_blank" class="btn btn-tg">✈️ Отправить в Telegram</a>
+                <a id="smsLink" href="#" class="btn btn-sms">✉️ Отправить обычной SMS</a>
+            </div>
+
+            <button type="button" class="btn back-btn" onclick="resetForm()">← Назад к заказу</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('client_name').value;
+            const phone = document.getElementById('client_phone').value.trim();
+            const model = document.getElementById('model').value;
+            const price = document.getElementById('price').value;
+
+            // Текст сообщения для клиента
+            const message = `Уважаемый(-ая) ${name}! Ваше устройство (${model}) готово к выдаче в TEXNOFON. Сумма к оплате: ${price}. Ждем вас!`;
+            const encodedMessage = encodeURIComponent(message);
+
+            // Очищаем номер для ссылок (убираем лишние пробелы и скобки если есть)
+            const cleanPhone = phone.replace(/[^0-9+]/g, '');
+
+            // Ссылки для мессенджеров и SMS
+            document.getElementById('waLink').href = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+            document.getElementById('tgLink').href = `https://t.me/share/url?url=&text=${encodedMessage}`;
+            document.getElementById('smsLink').href = `sms:${cleanPhone}?body=${encodedMessage}`;
+
+            // Показываем текст предпросмотра
+            document.getElementById('previewText').textContent = message;
+
+            // Переключаем экраны
+            document.getElementById('orderForm').style.display = 'none';
+            document.getElementById('actionScreen').style.display = 'block';
+        });
+
+        function resetForm() {
+            document.getElementById('actionScreen').style.display = 'none';
+            document.getElementById('orderForm').style.display = 'block';
+            document.getElementById('orderForm').reset();
+        }
+    </script>
+</body>
+</html>
