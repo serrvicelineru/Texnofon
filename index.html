@@ -292,10 +292,15 @@
             orders.unshift(newOrder);
             saveAndRender();
             
-            // Текст заявки для отправки в Telegram на @jvmpos
-            const tgMessage = `📦 *Заказ: ${newOrder.track}*%0A📱 Устройство: ${newOrder.model} — ${newOrder.issue}%0A💰 Цена: ${newOrder.price}%0A👤 Клиент: ${newOrder.name} (${newOrder.phone})%0A⏳ Срок: ${newOrder.deadline}%0A📅 Дата приема: ${newOrder.date}`;
+            // Ссылка для уведомления клиента (будет внутри текста в Telegram)
+            const readyText = `Здравствуйте, ${newOrder.name}! Ваш аппарат (${newOrder.model}) по трек-коду *${newOrder.track}* готов к выдаче в More Case. Сумма: ${newOrder.price}. Ждем вас!`;
+            const cleanPhone = newOrder.phone.replace(/[^0-9+]/g, '');
+            const clientLink = `https://t.me/jvmpos`; // Или замените на ваш канал/бота куда отправлять
+
+            // Текст заявки для @jvmpos с кликабельной ссылкой «Готово / Уведомить»
+            const tgMessage = `📦 *Заказ: ${newOrder.track}*%0A📱 Устройство: ${newOrder.model} — ${newOrder.issue}%0A💰 Цена: ${newOrder.price}%0A👤 Клиент: ${newOrder.name} (${newOrder.phone})%0A⏳ Срок: ${newOrder.deadline}%0A📅 Дата приема: ${newOrder.date}%0A%0A[👉 Нажмите сюда для уведомления о готовности](https://wa.me/${cleanPhone}?text=${encodeURIComponent(readyText)})`;
             
-            // Перенаправление на отправку в Telegram-аккаунт/канал @jvmpos
+            // Отправляем на @jvmpos
             window.open(`https://t.me/jvmpos?text=${tgMessage}`, '_blank');
 
             document.getElementById('orderForm').reset();
