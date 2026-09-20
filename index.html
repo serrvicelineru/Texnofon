@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEXNOFON CRM — Заказы и Уведомления</title>
+    <title>TEXNOFON CRM — Заказы</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -225,7 +225,7 @@
                     <label>Сумма к оплате:</label>
                     <input type="text" id="price" required placeholder="450000 сум">
                 </div>
-                <button type="submit" class="btn">Принять в ремонт (Создать трек-код)</button>
+                <button type="submit" class="btn">Принять в ремонт и отправить в Telegram</button>
             </form>
         </div>
 
@@ -260,6 +260,10 @@
             e.preventDefault();
 
             const trackCode = 'TEX-' + Math.floor(1000 + Math.random() * 9000);
+            const now = new Date();
+            const formattedDate = String(now.getDate()).padStart(2, '0') + '.' + 
+                                  String(now.getMonth() + 1).padStart(2, '0') + '.' + 
+                                  now.getFullYear();
             
             const newOrder = {
                 id: Date.now(),
@@ -270,20 +274,19 @@
                 issue: document.getElementById('issue').value,
                 price: document.getElementById('price').value,
                 status: 'В работе',
-                date: new Date().toLocaleDateString()
+                date: formattedDate
             };
 
             orders.unshift(newOrder);
             saveAndRender();
             
-            // Формируем текст для отправки в Telegram
-            const tgMessage = `📦 *Новый заказ: ${trackCode}*%0A👤 Клиент: ${newOrder.name} (${newOrder.phone})%0A📱 Устройство: ${newOrder.model} — ${newOrder.issue}%0A💰 Сумма: ${newOrder.price}%0A📅 Дата: ${newOrder.date}`;
+            // Точный шаблон отправки в Telegram
+            const tgMessage = `📦 *Новый заказ: ${newOrder.track}*%0A👤 Клиент: ${newOrder.name} (${newOrder.phone})%0A📱 Устройство: ${newOrder.model} — ${newOrder.issue}%0A💰 Сумма: ${newOrder.price}%0A📅 Дата: ${newOrder.date}`;
             
-            // Автоматически открываем Telegram для отправки в ваш канал или чат
+            // Открываем Telegram для передачи сообщения в канал/чат
             window.open(`https://t.me/share/url?url=&text=${tgMessage}`, '_blank');
 
             document.getElementById('orderForm').reset();
-            alert('Заказ принят! Трек-код: ' + trackCode);
             switchTab('list');
         });
 
@@ -337,7 +340,7 @@
         function toggleStatus(id) {
             orders = orders.map(ord => {
                 if (ord.id === id) {
-                    ord.status = ord.status === 'В работе' ? 'Готов' : 'В работе';
+                    ord.status = ord.status === 'В работе' ? 'Готов' : 'В работу';
                 }
                 return ord;
             });
