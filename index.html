@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEXNOFON — Управление заказами</title>
+    <title>TEXNOFON CRM — Учет ремонтов</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -14,6 +14,7 @@
             --text-muted: #94a3b8;
             --border: #334155;
             --success: #10b981;
+            --warning: #f59e0b;
             --whatsapp: #25d366;
             --telegram: #0088cc;
             --sms: #8b5cf6;
@@ -23,51 +24,77 @@
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
         }
         .container {
             width: 100%;
-            max-width: 550px;
+            max-width: 600px;
             background: var(--card-bg);
-            padding: 35px;
+            padding: 20px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border);
+            box-sizing: border-box;
         }
-        .logo-area {
+        .header {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            align-items: center;
             text-align: center;
-            margin-bottom: 25px;
         }
-        .logo-area h1 {
+        .header h1 {
             margin: 0;
-            font-size: 26px;
+            font-size: 24px;
             color: #60a5fa;
             letter-spacing: 0.5px;
         }
-        .logo-area p {
-            margin: 5px 0 0;
-            font-size: 14px;
-            color: var(--text-muted);
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            width: 100%;
         }
+        .tab-btn {
+            flex: 1;
+            background: #0f172a;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 15px;
         }
         label {
             display: block;
             font-weight: 500;
-            margin-bottom: 7px;
-            font-size: 13px;
+            margin-bottom: 6px;
+            font-size: 12px;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         input, textarea {
             width: 100%;
-            padding: 12px 16px;
+            padding: 12px 14px;
             background-color: #0f172a;
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -75,127 +102,250 @@
             font-size: 16px;
             box-sizing: border-box;
         }
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
+        input:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        
         .btn {
-            width: 100%;
+            background-color: var(--primary);
+            color: white;
             border: none;
             padding: 14px;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 600;
             border-radius: 10px;
             cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+            margin-top: 5px;
+        }
+        .btn:hover { background-color: var(--primary-hover); }
+
+        .order-card {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 8px;
+        }
+        .track-badge {
+            background: var(--primary);
             color: white;
-            transition: opacity 0.2s;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-work { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status-ready { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+
+        .order-info { font-size: 14px; margin-bottom: 12px; color: var(--text-muted); line-height: 1.5; }
+        .order-info span { color: var(--text); font-weight: 500; }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .btn-mini {
+            padding: 10px;
+            font-size: 13px;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            cursor: pointer;
             text-align: center;
             text-decoration: none;
-            display: inline-block;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
             box-sizing: border-box;
         }
-        .btn:hover { opacity: 0.9; }
-        .btn-tg { background-color: var(--telegram); }
-        .btn-wa { background-color: var(--whatsapp); }
-        .btn-sms { background-color: var(--sms); }
-        .btn-primary { background-color: var(--primary); margin-top: 10px; }
+        .btn-wa { background: var(--whatsapp); }
+        .btn-tg { background: var(--telegram); }
+        .btn-sms { background: var(--sms); }
+        .btn-status { background: #334155; grid-column: span 2; }
+        .btn-del { background: #7f1d1d; grid-column: span 2; margin-top: 4px; }
         
-        .action-screen {
-            display: none;
+        .developer-footer {
+            margin-top: 25px;
             text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
         }
-        .action-screen h3 { color: var(--success); margin-bottom: 10px; }
-        .action-screen p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
-        .back-btn { background: #334155; margin-top: 15px; }
+        .developer-footer a { color: #60a5fa; text-decoration: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo-area">
-            <h1>TEXNOFON</h1>
-            <p>Готовый заказ — Отправка клиенту</p>
+        <div class="header">
+            <h1>TEXNOFON CRM</h1>
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('new')">➕ Новый заказ</button>
+                <button class="tab-btn" onclick="switchTab('list')">📋 База (<span id="orderCount">0</span>)</button>
+            </div>
         </div>
 
-        <!-- ФОРМА ВВОДА -->
-        <form id="orderForm">
-            <div class="form-group">
-                <label for="client_name">Имя клиента:</label>
-                <input type="text" id="client_name" required placeholder="Например: Алишер">
-            </div>
+        <!-- ВКЛАДКА 1: НОВЫЙ ЗАКАЗ -->
+        <div id="tab-new" class="tab-content active">
+            <form id="orderForm">
+                <div class="form-group">
+                    <label>Имя клиента:</label>
+                    <input type="text" id="client_name" required placeholder="Например: Алишер">
+                </div>
+                <div class="form-group">
+                    <label>Номер телефона:</label>
+                    <input type="text" id="client_phone" required placeholder="+998901234567">
+                </div>
+                <div class="form-group">
+                    <label>Модель устройства:</label>
+                    <input type="text" id="model" required placeholder="Samsung Galaxy A24">
+                </div>
+                <div class="form-group">
+                    <label>Неисправность / Что делать:</label>
+                    <textarea id="issue" rows="2" required placeholder="Замена экрана"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Сумма к оплате:</label>
+                    <input type="text" id="price" required placeholder="450000 сум">
+                </div>
+                <button type="submit" class="btn">Принять в ремонт (Создать трек-код)</button>
+            </form>
+        </div>
 
-            <div class="form-group">
-                <label for="client_phone">Номер телефона (с плюсом):</label>
-                <input type="text" id="client_phone" required placeholder="+998901234567">
-            </div>
+        <!-- ВКЛАДКА 2: БАЗА ЗАКАЗОВ -->
+        <div id="tab-list" class="tab-content">
+            <div id="ordersContainer"></div>
+        </div>
 
-            <div class="form-group">
-                <label for="model">Устройство / Что делали:</label>
-                <input type="text" id="model" required placeholder="Samsung A24 (Замена экрана)">
-            </div>
-
-            <div class="form-group">
-                <label for="price">Сумма к оплате:</label>
-                <input type="text" id="price" required placeholder="450000 сум">
-            </div>
-
-            <button type="submit" class="btn btn-primary">Сформировать уведомление</button>
-        </form>
-
-        <!-- ЭКРАН ВЫБОРА КУДА ОТПРАВИТЬ -->
-        <div id="actionScreen" class="action-screen">
-            <h3>Готово! Выберите способ отправки:</h3>
-            <p id="previewText" style="background: #0f172a; padding: 12px; border-radius: 8px; font-size: 13px; text-align: left; border: 1px solid var(--border);"></p>
-            
-            <div class="btn-group">
-                <a id="waLink" href="#" target="_blank" class="btn btn-wa">💬 Отправить в WhatsApp</a>
-                <a id="tgLink" href="#" target="_blank" class="btn btn-tg">✈️ Отправить в Telegram</a>
-                <a id="smsLink" href="#" class="btn btn-sms">✉️ Отправить обычной SMS</a>
-            </div>
-
-            <button type="button" class="btn back-btn" onclick="resetForm()">← Назад к заказу</button>
+        <div class="developer-footer">
+            Разработчик: <a href="https://t.me/ko62er" target="_blank">@ko62er</a>
         </div>
     </div>
 
     <script>
+        let orders = JSON.parse(localStorage.getItem('texnofon_orders')) || [];
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            if(tab === 'new') {
+                document.getElementById('tab-new').classList.add('active');
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            } else {
+                document.getElementById('tab-list').classList.add('active');
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                renderOrders();
+            }
+        }
+
         document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const name = document.getElementById('client_name').value;
-            const phone = document.getElementById('client_phone').value.trim();
-            const model = document.getElementById('model').value;
-            const price = document.getElementById('price').value;
+            const trackCode = 'TEX-' + Math.floor(1000 + Math.random() * 9000);
+            
+            const newOrder = {
+                id: Date.now(),
+                track: trackCode,
+                name: document.getElementById('client_name').value,
+                phone: document.getElementById('client_phone').value.trim(),
+                model: document.getElementById('model').value,
+                issue: document.getElementById('issue').value,
+                price: document.getElementById('price').value,
+                status: 'В работе',
+                date: new Date().toLocaleDateString()
+            };
 
-            // Текст сообщения для клиента
-            const message = `Уважаемый(-ая) ${name}! Ваше устройство (${model}) готово к выдаче в TEXNOFON. Сумма к оплате: ${price}. Ждем вас!`;
-            const encodedMessage = encodeURIComponent(message);
-
-            // Очищаем номер для ссылок (убираем лишние пробелы и скобки если есть)
-            const cleanPhone = phone.replace(/[^0-9+]/g, '');
-
-            // Ссылки для мессенджеров и SMS
-            document.getElementById('waLink').href = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
-            document.getElementById('tgLink').href = `https://t.me/share/url?url=&text=${encodedMessage}`;
-            document.getElementById('smsLink').href = `sms:${cleanPhone}?body=${encodedMessage}`;
-
-            // Показываем текст предпросмотра
-            document.getElementById('previewText').textContent = message;
-
-            // Переключаем экраны
-            document.getElementById('orderForm').style.display = 'none';
-            document.getElementById('actionScreen').style.display = 'block';
+            orders.unshift(newOrder);
+            saveAndRender();
+            
+            document.getElementById('orderForm').reset();
+            alert('Заказ успешно принят! Трек-код: ' + trackCode);
+            switchTab('list');
         });
 
-        function resetForm() {
-            document.getElementById('actionScreen').style.display = 'none';
-            document.getElementById('orderForm').style.display = 'block';
-            document.getElementById('orderForm').reset();
+        function saveAndRender() {
+            localStorage.setItem('texnofon_orders', JSON.stringify(orders));
+            document.getElementById('orderCount').textContent = orders.length;
         }
+
+        function renderOrders() {
+            const container = document.getElementById('ordersContainer');
+            saveAndRender();
+
+            if (orders.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">База заказов пока пуста</p>';
+                return;
+            }
+
+            container.innerHTML = orders.map(ord => {
+                const cleanPhone = ord.phone.replace(/[^0-9+]/g, '');
+                const readyText = `Здравствуйте, ${ord.name}! Ваш аппарат (${ord.model}) по трек-коду *${ord.track}* готов к выдаче в TEXNOFON. Сумма: ${ord.price}. Ждем вас!`;
+                const encodedText = encodeURIComponent(readyText);
+
+                const isReady = ord.status === 'Готов';
+                const statusClass = isReady ? 'status-ready' : 'status-work';
+
+                return `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <span class="track-badge">📌 ${ord.track}</span>
+                            <span class="status-badge ${statusClass}">${ord.status}</span>
+                        </div>
+                        <div class="order-info">
+                            👤 Клиент: <span>${ord.name} (${ord.phone})</span><br>
+                            📱 Устройство: <span>${ord.model} — ${ord.issue}</span><br>
+                            💰 Сумма: <span>${ord.price}</span> | 📅 Дата: ${ord.date}
+                        </div>
+                        <div class="actions-grid">
+                            <button class="btn-mini btn-status" onclick="toggleStatus(${ord.id})">
+                                ${isReady ? '🔄 Вернуть в работу' : '✅ Готов (Клиенту)'}
+                            </button>
+                            <a href="https://wa.me/${cleanPhone}?text=${encodedText}" target="_blank" class="btn-mini btn-wa">💬 WhatsApp</a>
+                            <a href="https://t.me/share/url?url=&text=${encodedText}" target="_blank" class="btn-mini btn-tg">✈️ Telegram</a>
+                            <a href="sms:${cleanPhone}?body=${encodedText}" class="btn-mini btn-sms">✉️ SMS</a>
+                            <button class="btn-mini btn-del" onclick="deleteOrder(${ord.id})">🗑 Удалить</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleStatus(id) {
+            orders = orders.map(ord => {
+                if (ord.id === id) {
+                    ord.status = ord.status === 'В работе' ? 'Готов' : 'В работе';
+                }
+                return ord;
+            });
+            renderOrders();
+        }
+
+        function deleteOrder(id) {
+            if(confirm('Удалить этот заказ из базы?')) {
+                orders = orders.filter(ord => ord.id !== id);
+                renderOrders();
+            }
+        }
+
+        saveAndRender();
     </script>
 </body>
 </html>
