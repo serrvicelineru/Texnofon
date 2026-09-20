@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEXNOFON CRM — Учет ремонтов</title>
+    <title>TEXNOFON CRM — Заказы и Уведомления</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -276,8 +276,14 @@
             orders.unshift(newOrder);
             saveAndRender();
             
+            // Формируем текст для отправки в Telegram
+            const tgMessage = `📦 *Новый заказ: ${trackCode}*%0A👤 Клиент: ${newOrder.name} (${newOrder.phone})%0A📱 Устройство: ${newOrder.model} — ${newOrder.issue}%0A💰 Сумма: ${newOrder.price}%0A📅 Дата: ${newOrder.date}`;
+            
+            // Автоматически открываем Telegram для отправки в ваш канал или чат
+            window.open(`https://t.me/share/url?url=&text=${tgMessage}`, '_blank');
+
             document.getElementById('orderForm').reset();
-            alert('Заказ успешно принят! Трек-код: ' + trackCode);
+            alert('Заказ принят! Трек-код: ' + trackCode);
             switchTab('list');
         });
 
