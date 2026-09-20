@@ -445,7 +445,7 @@
                         <div class="actions-grid">
                             ${!isDone ? `
                                 <a href="https://wa.me/${cleanPhone}?text=${encodedText}" target="_blank" class="btn-mini btn-wa">💬 WA</a>
-                                <a href="https://t.me/+${cleanPhone}?text=${encodedText}" target="_blank" class="btn-mini btn-tg">✈️ TG</a>
+                                <a href="https://t.me/${cleanPhone}?text=${encodedText}" target="_blank" class="btn-mini btn-tg">✈️ TG</a>
                                 <a href="sms:${cleanPhone}?body=${encodedText}" class="btn-mini btn-sms">✉️ SMS</a>
                                 <div class="btn-status-group">
                                     <button class="btn-mini btn-status" onclick="changeStatus(${ord.id}, '${isReady ? 'В работе' : 'Готов'}')">
