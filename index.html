@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEXNOFON CRM — Заказы</title>
+    <title>More Case — Система приема и учета ремонтов</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -41,7 +41,7 @@
         .header {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 6px;
             border-bottom: 1px solid var(--border);
             padding-bottom: 15px;
             margin-bottom: 20px;
@@ -50,14 +50,20 @@
         }
         .header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 26px;
             color: #60a5fa;
             letter-spacing: 0.5px;
+        }
+        .header p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
         }
         .nav-tabs {
             display: flex;
             gap: 8px;
             width: 100%;
+            margin-top: 12px;
         }
         .tab-btn {
             flex: 1;
@@ -87,7 +93,7 @@
             display: block;
             font-weight: 500;
             margin-bottom: 6px;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -99,7 +105,7 @@
             border: 1px solid var(--border);
             border-radius: 10px;
             color: var(--text);
-            font-size: 16px;
+            font-size: 15px;
             box-sizing: border-box;
         }
         input:focus, textarea:focus { outline: none; border-color: var(--primary); }
@@ -109,7 +115,7 @@
             color: white;
             border: none;
             padding: 14px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             border-radius: 10px;
             cursor: pointer;
@@ -195,7 +201,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>TEXNOFON CRM</h1>
+            <h1>More Case</h1>
+            <p>Система приема и учета ремонтов</p>
             <div class="nav-tabs">
                 <button class="tab-btn active" onclick="switchTab('new')">➕ Новый заказ</button>
                 <button class="tab-btn" onclick="switchTab('list')">📋 База (<span id="orderCount">0</span>)</button>
@@ -206,24 +213,28 @@
         <div id="tab-new" class="tab-content active">
             <form id="orderForm">
                 <div class="form-group">
-                    <label>Имя клиента:</label>
-                    <input type="text" id="client_name" required placeholder="Например: Алишер">
-                </div>
-                <div class="form-group">
-                    <label>Номер телефона:</label>
-                    <input type="text" id="client_phone" required placeholder="+998901234567">
-                </div>
-                <div class="form-group">
                     <label>Модель устройства:</label>
-                    <input type="text" id="model" required placeholder="Samsung Galaxy A24">
+                    <input type="text" id="model" required placeholder="Например: Samsung Galaxy A24">
                 </div>
                 <div class="form-group">
                     <label>Неисправность / Что делать:</label>
-                    <textarea id="issue" rows="2" required placeholder="Замена экрана"></textarea>
+                    <textarea id="issue" rows="2" required placeholder="Например: Замена дисплея, чистка после воды"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Сумма к оплате:</label>
-                    <input type="text" id="price" required placeholder="450000 сум">
+                    <label>Цена:</label>
+                    <input type="text" id="price" required placeholder="Например: 4500">
+                </div>
+                <div class="form-group">
+                    <label>Имя хозяина (клиента):</label>
+                    <input type="text" id="client_name" required placeholder="Имя клиента">
+                </div>
+                <div class="form-group">
+                    <label>Номер телефона:</label>
+                    <input type="text" id="client_phone" required placeholder="+998 (90) 123-45-67">
+                </div>
+                <div class="form-group">
+                    <label>Срок выполнения:</label>
+                    <input type="text" id="deadline" required placeholder="Например: 1 день / Завтра в 15:00">
                 </div>
                 <button type="submit" class="btn">Принять в ремонт и отправить в Telegram</button>
             </form>
@@ -240,7 +251,7 @@
     </div>
 
     <script>
-        let orders = JSON.parse(localStorage.getItem('texnofon_orders')) || [];
+        let orders = JSON.parse(localStorage.getItem('more_case_orders')) || [];
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -259,7 +270,7 @@
         document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const trackCode = 'TEX-' + Math.floor(1000 + Math.random() * 9000);
+            const trackCode = 'MC-' + Math.floor(1000 + Math.random() * 9000);
             const now = new Date();
             const formattedDate = String(now.getDate()).padStart(2, '0') + '.' + 
                                   String(now.getMonth() + 1).padStart(2, '0') + '.' + 
@@ -268,11 +279,12 @@
             const newOrder = {
                 id: Date.now(),
                 track: trackCode,
-                name: document.getElementById('client_name').value,
-                phone: document.getElementById('client_phone').value.trim(),
                 model: document.getElementById('model').value,
                 issue: document.getElementById('issue').value,
                 price: document.getElementById('price').value,
+                name: document.getElementById('client_name').value,
+                phone: document.getElementById('client_phone').value.trim(),
+                deadline: document.getElementById('deadline').value,
                 status: 'В работе',
                 date: formattedDate
             };
@@ -280,10 +292,9 @@
             orders.unshift(newOrder);
             saveAndRender();
             
-            // Точный шаблон отправки в Telegram
-            const tgMessage = `📦 *Новый заказ: ${newOrder.track}*%0A👤 Клиент: ${newOrder.name} (${newOrder.phone})%0A📱 Устройство: ${newOrder.model} — ${newOrder.issue}%0A💰 Сумма: ${newOrder.price}%0A📅 Дата: ${newOrder.date}`;
+            // Формат отправки в Telegram
+            const tgMessage = `📦 *Заказ: ${newOrder.track}*%0A📱 Устройство: ${newOrder.model} — ${newOrder.issue}%0A💰 Цена: ${newOrder.price}%0A👤 Клиент: ${newOrder.name} (${newOrder.phone})%0A⏳ Срок: ${newOrder.deadline}%0A📅 Дата приема: ${newOrder.date}`;
             
-            // Открываем Telegram для передачи сообщения в канал/чат
             window.open(`https://t.me/share/url?url=&text=${tgMessage}`, '_blank');
 
             document.getElementById('orderForm').reset();
@@ -291,7 +302,7 @@
         });
 
         function saveAndRender() {
-            localStorage.setItem('texnofon_orders', JSON.stringify(orders));
+            localStorage.setItem('more_case_orders', JSON.stringify(orders));
             document.getElementById('orderCount').textContent = orders.length;
         }
 
@@ -306,7 +317,7 @@
 
             container.innerHTML = orders.map(ord => {
                 const cleanPhone = ord.phone.replace(/[^0-9+]/g, '');
-                const readyText = `Здравствуйте, ${ord.name}! Ваш аппарат (${ord.model}) по трек-коду *${ord.track}* готов к выдаче в TEXNOFON. Сумма: ${ord.price}. Ждем вас!`;
+                const readyText = `Здравствуйте, ${ord.name}! Ваш аппарат (${ord.model}) по трек-коду *${ord.track}* готов к выдаче в More Case. Сумма: ${ord.price}. Ждем вас!`;
                 const encodedText = encodeURIComponent(readyText);
 
                 const isReady = ord.status === 'Готов';
@@ -319,9 +330,10 @@
                             <span class="status-badge ${statusClass}">${ord.status}</span>
                         </div>
                         <div class="order-info">
-                            👤 Клиент: <span>${ord.name} (${ord.phone})</span><br>
                             📱 Устройство: <span>${ord.model} — ${ord.issue}</span><br>
-                            💰 Сумма: <span>${ord.price}</span> | 📅 Дата: ${ord.date}
+                            💰 Цена: <span>${ord.price}</span><br>
+                            👤 Клиент: <span>${ord.name} (${ord.phone})</span><br>
+                            ⏳ Срок: <span>${ord.deadline}</span> | 📅 ${ord.date}
                         </div>
                         <div class="actions-grid">
                             <button class="btn-mini btn-status" onclick="toggleStatus(${ord.id})">
@@ -340,7 +352,7 @@
         function toggleStatus(id) {
             orders = orders.map(ord => {
                 if (ord.id === id) {
-                    ord.status = ord.status === 'В работе' ? 'Готов' : 'В работу';
+                    ord.status = ord.status === 'В работе' ? 'Готов' : 'В работе';
                 }
                 return ord;
             });
