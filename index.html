@@ -18,6 +18,7 @@
             --whatsapp: #25d366;
             --telegram: #0088cc;
             --sms: #8b5cf6;
+            --purple: #a855f7;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -125,12 +126,45 @@
         }
         .btn:hover { background-color: var(--primary-hover); }
 
+        /* Статистика и поиск */
+        .stats-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .stat-card {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-card .num {
+            font-size: 16px;
+            font-weight: bold;
+            color: #60a5fa;
+        }
+        .stat-card .lbl {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+        .search-box {
+            margin-bottom: 15px;
+        }
+
         .order-card {
             background: #0f172a;
             border: 1px solid var(--border);
             border-radius: 14px;
             padding: 15px;
             margin-bottom: 15px;
+        }
+        .order-card.archived {
+            opacity: 0.6;
+            border-style: dashed;
         }
         .order-header {
             display: flex;
@@ -156,18 +190,19 @@
         }
         .status-work { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
         .status-ready { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-done { background: rgba(168, 85, 247, 0.2); color: var(--purple); }
 
         .order-info { font-size: 14px; margin-bottom: 12px; color: var(--text-muted); line-height: 1.5; }
         .order-info span { color: var(--text); font-weight: 500; }
 
         .actions-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
         }
         .btn-mini {
-            padding: 10px;
-            font-size: 13px;
+            padding: 10px 4px;
+            font-size: 12px;
             border-radius: 8px;
             border: none;
             color: white;
@@ -178,15 +213,31 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 4px;
             box-sizing: border-box;
         }
         .btn-wa { background: var(--whatsapp); }
         .btn-tg { background: var(--telegram); }
         .btn-sms { background: var(--sms); }
-        .btn-status { background: #334155; grid-column: span 2; }
-        .btn-del { background: #7f1d1d; grid-column: span 2; margin-top: 4px; }
+        .btn-status-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            grid-column: span 3;
+        }
+        .btn-status { background: #334155; }
+        .btn-done { background: var(--purple); }
+        .btn-del { background: #7f1d1d; grid-column: span 3; margin-top: 4px; }
         
+        .archive-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin: 25px 0 10px 0;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+
         .developer-footer {
             margin-top: 25px;
             text-align: center;
@@ -242,6 +293,27 @@
 
         <!-- ВКЛАДКА 2: БАЗА ЗАКАЗОВ -->
         <div id="tab-list" class="tab-content">
+            <!-- Статистика -->
+            <div class="stats-box">
+                <div class="stat-card">
+                    <div class="num" id="statActive">0</div>
+                    <div class="lbl">В работе</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="statReady">0</div>
+                    <div class="lbl">Готовы</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="statSum">0</div>
+                    <div class="lbl">Сумма (актив)</div>
+                </div>
+            </div>
+
+            <!-- Поиск -->
+            <div class="search-box">
+                <input type="text" id="searchInput" oninput="renderOrders()" placeholder="🔍 Поиск по имени, телефону или треку...">
+            </div>
+
             <div id="ordersContainer"></div>
         </div>
 
@@ -292,15 +364,8 @@
             orders.unshift(newOrder);
             saveAndRender();
             
-            // Ссылка для уведомления клиента (будет внутри текста в Telegram)
-            const readyText = `Здравствуйте, ${newOrder.name}! Ваш аппарат (${newOrder.model}) по трек-коду *${newOrder.track}* готов к выдаче в More Case. Сумма: ${newOrder.price}. Ждем вас!`;
-            const cleanPhone = newOrder.phone.replace(/[^0-9+]/g, '');
-            const clientLink = `https://t.me/jvmpos`; // Или замените на ваш канал/бота куда отправлять
-
-            // Текст заявки для @jvmpos с кликабельной ссылкой «Готово / Уведомить»
-            const tgMessage = `📦 *Заказ: ${newOrder.track}*%0A📱 Устройство: ${newOrder.model} — ${newOrder.issue}%0A💰 Цена: ${newOrder.price}%0A👤 Клиент: ${newOrder.name} (${newOrder.phone})%0A⏳ Срок: ${newOrder.deadline}%0A📅 Дата приема: ${newOrder.date}%0A%0A[👉 Нажмите сюда для уведомления о готовности](https://wa.me/${cleanPhone}?text=${encodeURIComponent(readyText)})`;
+            const tgMessage = `📦 *Заказ: ${newOrder.track}*%0A📱 Устройство: ${newOrder.model} — ${newOrder.issue}%0A💰 Цена: ${newOrder.price}%0A👤 Клиент: ${newOrder.name} (${newOrder.phone})%0A⏳ Срок: ${newOrder.deadline}%0A📅 Дата приема: ${newOrder.date}`;
             
-            // Отправляем на @jvmpos
             window.open(`https://t.me/jvmpos?text=${tgMessage}`, '_blank');
 
             document.getElementById('orderForm').reset();
@@ -309,28 +374,64 @@
 
         function saveAndRender() {
             localStorage.setItem('more_case_orders', JSON.stringify(orders));
-            document.getElementById('orderCount').textContent = orders.length;
+            document.getElementById('orderCount').textContent = orders.filter(o => o.status !== 'Выдан').length;
+            updateStats();
+        }
+
+        function updateStats() {
+            let activeCount = 0;
+            let readyCount = 0;
+            let totalSum = 0;
+
+            orders.forEach(ord => {
+                if(ord.status !== 'Выдан') {
+                    if(ord.status === 'В работе') activeCount++;
+                    if(ord.status === 'Готов') readyCount++;
+                    
+                    // Извлекаем цифры из строки цены для подсчета суммы
+                    let numericPrice = parseInt(ord.price.replace(/[^0-9]/g, '')) || 0;
+                    totalSum += numericPrice;
+                }
+            });
+
+            document.getElementById('statActive').textContent = activeCount;
+            document.getElementById('statReady').textContent = readyCount;
+            document.getElementById('statSum').textContent = totalSum.toLocaleString();
         }
 
         function renderOrders() {
             const container = document.getElementById('ordersContainer');
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
             saveAndRender();
 
-            if (orders.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">База заказов пока пуста</p>';
+            let filteredOrders = orders.filter(ord => {
+                const matchText = (ord.track + ' ' + ord.name + ' ' + ord.phone + ' ' + ord.model + ' ' + ord.issue).toLowerCase();
+                return matchText.includes(searchQuery);
+            });
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Заказы не найдены</p>';
                 return;
             }
 
-            container.innerHTML = orders.map(ord => {
+            let activeHtml = '';
+            let archiveHtml = '';
+            let hasArchived = false;
+
+            filteredOrders.forEach(ord => {
                 const cleanPhone = ord.phone.replace(/[^0-9+]/g, '');
-                const readyText = `Здравствуйте, ${ord.name}! Ваш аппарат (${ord.model}) по трек-коду *${ord.track}* готов к выдаче в More Case. Сумма: ${ord.price}. Ждем вас!`;
+                const readyText = `Здравствуйте, ${ord.name}! Ваш аппарат (${ord.model}) по трек-коду ${ord.track} готов к выдаче в More Case. Сумма: ${ord.price}. Ждем вас!`;
                 const encodedText = encodeURIComponent(readyText);
 
                 const isReady = ord.status === 'Готов';
-                const statusClass = isReady ? 'status-ready' : 'status-work';
+                const isDone = ord.status === 'Выдан';
+                
+                let statusClass = 'status-work';
+                if (isReady) statusClass = 'status-ready';
+                if (isDone) statusClass = 'status-done';
 
-                return `
-                    <div class="order-card">
+                const cardHtml = `
+                    <div class="order-card ${isDone ? 'archived' : ''}">
                         <div class="order-header">
                             <span class="track-badge">📌 ${ord.track}</span>
                             <span class="status-badge ${statusClass}">${ord.status}</span>
@@ -342,23 +443,48 @@
                             ⏳ Срок: <span>${ord.deadline}</span> | 📅 ${ord.date}
                         </div>
                         <div class="actions-grid">
-                            <button class="btn-mini btn-status" onclick="toggleStatus(${ord.id})">
-                                ${isReady ? '🔄 Вернуть в работу' : '✅ Готов (Клиенту)'}
-                            </button>
-                            <a href="https://wa.me/${cleanPhone}?text=${encodedText}" target="_blank" class="btn-mini btn-wa">💬 WhatsApp</a>
-                            <a href="https://t.me/jvmpos?text=${encodedText}" target="_blank" class="btn-mini btn-tg">✈️ Telegram</a>
-                            <a href="sms:${cleanPhone}?body=${encodedText}" class="btn-mini btn-sms">✉️ SMS</a>
-                            <button class="btn-mini btn-del" onclick="deleteOrder(${ord.id})">🗑 Удалить</button>
+                            ${!isDone ? `
+                                <a href="https://wa.me/${cleanPhone}?text=${encodedText}" target="_blank" class="btn-mini btn-wa">💬 WA</a>
+                                <a href="https://t.me/+${cleanPhone}?text=${encodedText}" target="_blank" class="btn-mini btn-tg">✈️ TG</a>
+                                <a href="sms:${cleanPhone}?body=${encodedText}" class="btn-mini btn-sms">✉️ SMS</a>
+                                <div class="btn-status-group">
+                                    <button class="btn-mini btn-status" onclick="changeStatus(${ord.id}, '${isReady ? 'В работе' : 'Готов'}')">
+                                        ${isReady ? '🔄 В работу' : '✅ Готов'}
+                                    </button>
+                                    <button class="btn-mini btn-done" onclick="changeStatus(${ord.id}, 'Выдан')">
+                                        📦 Выдан
+                                    </button>
+                                </div>
+                            ` : `
+                                <button class="btn-mini btn-status" style="grid-column: span 3;" onclick="changeStatus(${ord.id}, 'Готов')">
+                                    🔄 Вернуть из архива
+                                </button>
+                            `}
+                            <button class="btn-mini btn-del" onclick="deleteOrder(${ord.id})">🗑 Удалить заказ</button>
                         </div>
                     </div>
                 `;
-            }).join('');
+
+                if (isDone) {
+                    hasArchived = true;
+                    archiveHtml += cardHtml;
+                } else {
+                    activeHtml += cardHtml;
+                }
+            });
+
+            let finalHtml = activeHtml;
+            if (hasArchived) {
+                finalHtml += `<div class="archive-title">📁 Архив выданных заказов</div>` + archiveHtml;
+            }
+
+            container.innerHTML = finalHtml;
         }
 
-        function toggleStatus(id) {
+        function changeStatus(id, newStatus) {
             orders = orders.map(ord => {
                 if (ord.id === id) {
-                    ord.status = ord.status === 'В работе' ? 'Готов' : 'В работе';
+                    ord.status = newStatus;
                 }
                 return ord;
             });
@@ -376,3 +502,4 @@
     </script>
 </body>
 </html>
+
