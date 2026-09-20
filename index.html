@@ -292,10 +292,11 @@
             orders.unshift(newOrder);
             saveAndRender();
             
-            // Формат отправки в Telegram
+            // Текст заявки для отправки в Telegram на @jvmpos
             const tgMessage = `📦 *Заказ: ${newOrder.track}*%0A📱 Устройство: ${newOrder.model} — ${newOrder.issue}%0A💰 Цена: ${newOrder.price}%0A👤 Клиент: ${newOrder.name} (${newOrder.phone})%0A⏳ Срок: ${newOrder.deadline}%0A📅 Дата приема: ${newOrder.date}`;
             
-            window.open(`https://t.me/share/url?url=&text=${tgMessage}`, '_blank');
+            // Перенаправление на отправку в Telegram-аккаунт/канал @jvmpos
+            window.open(`https://t.me/jvmpos?text=${tgMessage}`, '_blank');
 
             document.getElementById('orderForm').reset();
             switchTab('list');
@@ -340,7 +341,7 @@
                                 ${isReady ? '🔄 Вернуть в работу' : '✅ Готов (Клиенту)'}
                             </button>
                             <a href="https://wa.me/${cleanPhone}?text=${encodedText}" target="_blank" class="btn-mini btn-wa">💬 WhatsApp</a>
-                            <a href="https://t.me/share/url?url=&text=${encodedText}" target="_blank" class="btn-mini btn-tg">✈️ Telegram</a>
+                            <a href="https://t.me/jvmpos?text=${encodedText}" target="_blank" class="btn-mini btn-tg">✈️ Telegram</a>
                             <a href="sms:${cleanPhone}?body=${encodedText}" class="btn-mini btn-sms">✉️ SMS</a>
                             <button class="btn-mini btn-del" onclick="deleteOrder(${ord.id})">🗑 Удалить</button>
                         </div>
